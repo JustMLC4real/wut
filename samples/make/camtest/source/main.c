@@ -150,7 +150,7 @@ void WHBLogConsoleDraw()
 
 int main(int argc, char **argv)
 {
-   const char* filename = "selfie.mv12";
+   const char* filename = "selfie.nv12";
 
    WHBLogConsoleSetColor(0);
    WHBProcInit();
