@@ -44,9 +44,9 @@ void camEventHandler(CAMEventHandlerInput* eventHandlerInput)
    {
       WHBLogPrintf("type=%d data0=%d data1=%d data2=%d",
             eventHandlerInput->type, eventHandlerInput->data0, eventHandlerInput->data1, eventHandlerInput->data2);
-      // event 1:  type=0 data0=274736480 data1=0 data2=1
-      // event 2-: type=0 data0=0         data1=0 data2=1
-      // NOTE: data0 = image pointer
+      // Wii U:  type=0 data0=imagePtr data1=0      data2=0
+      // Cemu:   type=0 data0=imagePtr data1=552960 data2=0
+      //                                     ^ CAMERA_YUV_BUFFER_SIZE
    }
 }
 
@@ -58,7 +58,13 @@ void closeCamera()
       WHBLogPrintf("CAMClose: err=%d", err);
       CAMExit(cam);
       cam = -1;
-      // TODO free mem an image
+      // TODO free mem and image
+      /*
+      if (mem != NULL)
+         free(mem);
+      if (image != NULL)
+         free(image);
+      */
    }
 }
 
@@ -71,7 +77,7 @@ void openCamera()
    streamInfo->height = CAMERA_STREAM_HEIGHT;
    streamInfo->width = CAMERA_STREAM_WIDTH;
 
-   size = CAMGetMemReq(streamInfo); // returns 5714944
+   size = CAMGetMemReq(streamInfo); // returns 5714944 on Wii U and 1024 on Cemu
    WHBLogPrintf("CAMGetMemReq: size=%d", size);
    if (size < 0) // never happens
       return;
@@ -95,7 +101,7 @@ void openCamera()
 
    CAMError err;
    cam = CAMInit(CAM_INSTANCE_0, setupInfo, &err);
-   WHBLogPrintf("CAMInit: err=%d, handle=%d [size=%d]", err, cam, workMem->size);
+   WHBLogPrintf("CAMInit: err=%d, handle=%d", err, cam);
    if (err < 0)
       return;
 
