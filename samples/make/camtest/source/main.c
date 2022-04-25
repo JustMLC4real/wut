@@ -44,7 +44,8 @@ void camEventHandler(CAMEventHandlerInput* eventHandlerInput)
    {
       WHBLogPrintf("type=%d data0=%d data1=%d data2=%d",
             eventHandlerInput->type, eventHandlerInput->data0, eventHandlerInput->data1, eventHandlerInput->data2);
-      // Wii U:  type=0 data0=imagePtr data1=0      data2=0
+      // Wii U:  type=0 data0=imagePtr data1=0      data2=0 // photo taken
+      // Wii U:  type=0 data0=0        data1=0      data2=1 // no photo taken
       // Cemu:   type=0 data0=imagePtr data1=552960 data2=0
       //                                     ^ CAMERA_YUV_BUFFER_SIZE
    }
