@@ -13,14 +13,14 @@ The webcam uses the NV12 format.
 
 If you'd like to investigate the raw format of the above image: [raw image](samples/make/camtest/selfie-mario.nv12)
 
-**NOTE**: cemu does not support a webcam. (I just copied a raw image into its SD folder.)
+**NOTE**: Cemu does not support a webcam. (I just copied a raw image from my Wii U into Cemu's SD folder.)
 
 ### Compile
 Get latest devkitpro.
 
 ```
-cd samples/make/camtest
-make
+$ cd samples/make/camtest
+$ make
 ```
 
 # Credits
