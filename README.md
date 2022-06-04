@@ -1,10 +1,10 @@
 
 # camtest
-A simple example to test the Wii U webcam.
+A simple example to test the Wii U webcam and microphone.
 
 AFAIK this is the first open source Wii U webcam example ever! :D
 
-Download [camtest-0.1.zip](https://github.com/revvv/wut/releases/download/0.1/camtest-0.1.zip)
+Download [camtest-0.2.zip](https://github.com/revvv/wut/releases/download/0.2/camtest-0.2.zip)
 
 # Raw image format
 The webcam uses the NV12 format.
@@ -14,6 +14,11 @@ The webcam uses the NV12 format.
 If you'd like to investigate the raw format of the above image: [raw image](samples/make/camtest/selfie-mario.nv12)
 
 **NOTE**: Cemu does not support a webcam. (I just copied a raw image from my Wii U into Cemu's SD folder.)
+
+# Raw audio format
+signed 16-bit PCM, big-endian, mono, 32000 Hz
+
+You can convert it with [audacity](https://www.audacityteam.org)
 
 ### Compile
 Get latest devkitpro.
@@ -26,4 +31,5 @@ $ make
 # Credits
 I imported and adapted [camera.h](https://github.com/revvv/wut/blob/camtest/include/camera/camera.h) from [libcafe](https://github.com/xhp-creations/libcafe/blob/master/include/wiiu/dynlib/camera.h)
 
-Thanks @xhp-creations
+Thanks @xhp-creations for header files<br>
+Thanks @NessieHax for microphone example

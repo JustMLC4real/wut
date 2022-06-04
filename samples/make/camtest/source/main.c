@@ -12,6 +12,8 @@
 #include <string.h> // memset()
 #include <stdio.h>
 
+#include "../../../../include/mic/mic.h"
+
 #include <coreinit/memheap.h>
 #include <coreinit/cache.h>
 #include <coreinit/memfrmheap.h>
@@ -67,6 +69,175 @@ void closeCamera()
          free(image);
       */
    }
+}
+
+void getAllMICStates(MICHandle mic)
+{
+   MICError err;
+   uint32_t value;
+   err = MICGetState(mic, MIC_STATE_SAMPLE_RATE, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+   if (err < 0)
+      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_SAMPLE_RATE=%d", value); // 32000
+
+   err = MICGetState(mic, MIC_STATE_GAIN_DB, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+   if (err < 0)
+      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_GAIN_DB=%d", value); // 6400
+
+   err = MICGetState(mic, MIC_STATE_GAIN_MIN, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+   if (err < 0)
+      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_GAIN_MIN=%d", value); // 0
+
+   err = MICGetState(mic, MIC_STATE_GAIN_MAX, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+   if (err < 0)
+      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_GAIN_MAX=%d", value); // 6400
+
+   err = MICGetState(mic, MIC_STATE_GAIN_STEP, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+   if (err < 0)
+      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_GAIN_STEP=%d", value); // 128
+
+//   /* Cemu crashes:
+   err = MICGetState(mic, MIC_STATE_MUTE, &value);
+   WHBLogPrintf("MICGetState: err=%d", err); // -1
+//   if (err < 0)
+//      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_MUTE=%d", value); // 128
+//   */
+
+   err = MICGetState(mic, MIC_STATE_ECHO_CANCELLATION, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+//   if (err < 0)
+//      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_ECHO_CANCELLATION=%d", value); // 0
+
+   err = MICGetState(mic, MIC_STATE_AUTO_SELECTION, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+//   if (err < 0)
+//      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_AUTO_SELECTION=%d", value); // 0
+
+//   /* Cemu crashes:
+   err = MICGetState(mic, MIC_STATE_DIGITAL_GAIN_DB, &value);
+   WHBLogPrintf("MICGetState: err=%d", err);
+//   if (err < 0)
+//      return;
+   WHBLogPrintf("MICGetState: MIC_STATE_DIGITAL_GAIN_DB=%d", value); // 0
+//   */
+}
+
+static int modulus = 0xFFFF; // at least 0x2800
+static int16_t s_audioBuffer[2 * 0xFFFF];
+
+// replace with a fancy equalizer
+void dumpBuffer()
+{
+   int sum = 0;
+   for (int i = 0; i < 2 * 0xFFFF; i++)
+   {
+      sum += s_audioBuffer[i];
+   }
+
+   WHBLogPrintf("mictest: input=%d", sum);
+}
+
+static MICHandle mic = -1;
+
+void closeMicrophone()
+{
+   if (mic == -1)
+      return;
+
+   MICError err = MICClose(mic);
+   WHBLogPrintf("MICClose: err=%d", err);
+   if (err < 0)
+      return;
+
+   err = MICUninit(mic);
+   WHBLogPrintf("MICUninit: err=%d", err);
+   if (err < 0)
+      return;
+
+   mic = -1;
+}
+
+bool openMicrophone()
+{
+   if (mic != -1)
+      return true;
+
+   MICError err;
+//   int ring_size = 1024;
+   //int16_t* base = alloc_zeroed(32, ring_size * sizeof(int16_t));
+   MICRingBuffer *ringBuffer = alloc_zeroed(32, sizeof(MICRingBuffer));
+   ringBuffer -> modulus = modulus; //0x2000; // 2800
+   ringBuffer -> base = s_audioBuffer;
+//   MEMResourceElement* mem1 = alloc_zeroed(32, sizeof(MEMResourceElement));
+//   mem1 -> size = ring_size;
+//   MEMResource* res = alloc_zeroed(32, sizeof(MEMResource));
+//   res -> numMemRes = 0;
+//   res -> memRes  = mem1;
+
+   mic = MICInit(MIC_INSTANCE_0, /*res*/ 0, ringBuffer, &err);
+   WHBLogPrintf("MICInit: err=%d handle=%d", err, mic);
+   if (err < 0)
+      return false;
+
+   err = MICOpen(mic);
+   WHBLogPrintf("MICOpen: err=%d", err);
+   if (err < 0)
+      return false;
+
+   return true;
+}
+
+void recordMicrophone()
+{
+   WHBLogPrintf("mictest: recording 2s audio...");
+   WHBLogConsoleDraw(); // flush previous line
+
+   if (!openMicrophone())
+      return;
+
+   //getAllMICStates(mic);
+
+//   err = MICSetDataConsumed(mic, 32768); // 8, 8*8, ... influences return values of MICGetStatus()
+//   WHBLogPrintf("MICSetDataConsumed: err=%d", err); // -81 if not multiple of 8
+
+//   MICStatus* status = alloc_zeroed(32, sizeof(MICStatus));
+//   err = MICGetStatus(mic, status);
+//   WHBLogPrintf("MICGetStatus: err=%d", err);
+//   if (err < 0)
+//      return;
+//
+//   WHBLogPrintf("MICGetStatus: flags=%d available=%d readPos=%d", status->flags, status->available, status->readPos); // 7, 0, 0
+                                                                                                                        // 7, 8184, 8 (after MICSetDataConsumed(mic, 8))
+   // record 2 seconds audio (s_audioBuffer can store about 2s)
+   OSSleepTicks(OSMillisecondsToTicks(2000));
+
+   const char* wavFilename = "mic.raw";
+   FILE* wavFile = fopen(wavFilename, "wb");
+   if (wavFile != NULL)
+   {
+      fwrite(s_audioBuffer, modulus * 2, 1, wavFile);
+      fclose(wavFile);
+      WHBLogPrintf("file written: %s", wavFilename);
+      WHBLogPrintf("raw file format: signed 16-bit PCM, big-endian, mono, 32000 Hz");
+   }
+   else
+   {
+      WHBLogPrintf("Error writing file: %s", wavFilename);
+   }
+
+   closeMicrophone();
 }
 
 void openCamera()
@@ -163,7 +334,8 @@ int main(int argc, char **argv)
    WHBProcInit();
    WHBLogConsoleInit();
    WHBLogPrintf("camtest: A = exit B = selfie Y = stream R/L = save/load");
-   WHBLogPrintf("         +/- = log on/off ");
+   WHBLogPrintf("mictest: X = open mic ZR = record 2 seconds audio");
+   WHBLogPrintf("         +/- = log on/off");
 
    openCamera();
 
@@ -177,6 +349,7 @@ int main(int argc, char **argv)
       {
          // exit
          closeCamera();
+         closeMicrophone();
          break;
       }
       if (btn == VPAD_BUTTON_B)
@@ -217,6 +390,18 @@ int main(int argc, char **argv)
             WHBLogPrintf("Error writing file: %s", filename);
          }
       }
+      if (btn == VPAD_BUTTON_X)
+      {
+         if (mic == -1)
+            openMicrophone();
+         else
+            closeMicrophone();
+      }
+      if (btn == VPAD_BUTTON_ZR)
+         recordMicrophone();
+
+      if (mic != -1)
+         dumpBuffer();
 
       WHBLogConsoleDraw();
       OSSleepTicks(OSMillisecondsToTicks(100));
