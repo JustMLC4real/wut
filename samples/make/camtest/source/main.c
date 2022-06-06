@@ -21,6 +21,8 @@
 #include <coreinit/screen.h>
 #include <proc_ui/procui.h>
 
+#include "sound.h"
+
 static CAMHandle cam = -1;
 static CAMSurface* surface;
 static int size = -1;
@@ -326,6 +328,105 @@ void getCameraImage()
    WHBLogPrintf("CAMSubmitTargetSurface: err=%d", err);
 }
 
+// play audio adapted from https://github.com/QuarkTheAwesome/LiveSynthesisU/blob/master/src/program.c
+voiceData voice1;
+AXVoiceOffsets voiceBuffer;
+AXVoiceSrc voiceSrc;
+AXVoiceDeviceMixData mix;
+
+void axFrameCallback() {
+   if (voice1.stopRequested) {
+      //Stop the voice
+      AXSetVoiceState(voice1.voice, 0);
+      //Clear the flag
+      voice1.stopRequested = 0;
+      voice1.stopped = 1;
+//      DCFlushRange(&voice1, sizeof(voice1));
+   } else if (voice1.modified) {
+      //does this really need to happen in the callback?
+//      DCInvalidateRange(&voice1, sizeof(voice1));
+//      memset(&voiceBuffer, 0, sizeof(voiceBuffer));
+      voiceBuffer.data = voice1.samples;
+      voiceBuffer.dataType = AX_VOICE_FORMAT_LPCM16;
+      voiceBuffer.loopingEnabled = 0; // was 1
+      voiceBuffer.currentOffset = 0;
+      voiceBuffer.endOffset = voice1.numSamples - 1;
+      voiceBuffer.loopOffset = 0;
+
+      voiceSrc.ratio = (unsigned int)(0x00010000 * ((float)32000 / (float)AXGetInputSamplesPerSec()));
+
+      AXSetVoiceOffsets(voice1.voice, &voiceBuffer);
+      AXSetVoiceSrc(voice1.voice, &voiceSrc);
+      AXSetVoiceSrcType(voice1.voice, 1);
+      AXSetVoiceState(voice1.voice, 1);
+      voice1.modified = 0;
+      voice1.stopped = 0;
+//      DCFlushRange(&voice1, sizeof(voice1));
+   }
+}
+
+void playMicrophoneRecording()
+{
+   const char* wavFilename = "mic.raw";
+   FILE* file = fopen(wavFilename, "rb");
+   if (file != NULL)
+   {
+      fread(s_audioBuffer, modulus * 2, 1, file);
+      fclose(file);
+      WHBLogPrintf("file read: %s", wavFilename);
+   }
+   else
+   {
+      WHBLogPrintf("Error reading file: %s", wavFilename);
+      return;
+   }
+
+   AXInitParams initparams = {
+         .renderer = AX_INIT_RENDERER_32KHZ,
+         .pipeline = AX_INIT_PIPELINE_SINGLE,
+   };
+   AXInitWithParams(&initparams);
+
+   AXRegisterFrameCallback((void*)axFrameCallback); //this callback doesn't really do much
+   voice1.samples = (unsigned char*) s_audioBuffer;
+   voice1.stopped = 1;
+
+   voice1.voice = AXAcquireVoice(25, 0, 0); //get a voice, priority 25. Just a random number I picked
+   if (!voice1.voice) {
+      WHBLogPrintf("sound error");
+      return;
+   }
+
+   AXVoiceBegin(voice1.voice);
+   AXSetVoiceType(voice1.voice, 0);
+
+   AXVoiceVeData vol = {
+         .volume = 0x8000,
+   };
+
+   AXSetVoiceVe(voice1.voice, &vol);
+
+   //Device mix? Volume of DRC/TV?
+   mix.bus[0].volume = 0x8000;
+   mix.bus[2].volume = 0x8000;
+
+   AXSetVoiceDeviceMix(voice1.voice, 0, 0, &mix);
+   AXSetVoiceDeviceMix(voice1.voice, 1, 0, &mix);
+
+   voice1.numSamples = modulus * 2;
+   voice1.modified = 1;
+
+   AXVoiceEnd(voice1.voice);
+
+//   //flush the samples to memory
+//   DCFlushRange(voice1.samples, modulus * 2);
+//   //mark the voice as modified so the audio callback will reload it
+//   voice1.modified = 1;
+//   //flush changes to memory
+//   DCFlushRange(&voice1, sizeof(voice1));
+
+}
+
 int main(int argc, char **argv)
 {
    const char* filename = "selfie.nv12";
@@ -335,6 +436,7 @@ int main(int argc, char **argv)
    WHBLogConsoleInit();
    WHBLogPrintf("camtest: A = exit B = selfie Y = stream R/L = save/load");
    WHBLogPrintf("mictest: X = open mic ZR = record 2 seconds audio");
+   WHBLogPrintf("                      ZL = play recording");
    WHBLogPrintf("         +/- = log on/off");
 
    openCamera();
@@ -398,7 +500,13 @@ int main(int argc, char **argv)
             closeMicrophone();
       }
       if (btn == VPAD_BUTTON_ZR)
+      {
          recordMicrophone();
+      }
+      if (btn == VPAD_BUTTON_ZL)
+      {
+         playMicrophoneRecording();
+      }
 
       if (mic != -1)
          dumpBuffer();
