@@ -199,6 +199,19 @@ bool openMicrophone()
    return true;
 }
 
+void WHBLogConsoleDraw()
+{
+   WHBLogConsoleDrawClear();
+
+   if (image != NULL)
+      LoadNV12(image, false);
+
+   if (drawText)
+      WHBLogConsoleDrawText();
+
+   WHBLogConsoleDrawFlip();
+}
+
 void recordMicrophone()
 {
    WHBLogPrintf("mictest: recording 2s audio...");
@@ -311,19 +324,6 @@ void getCameraImage()
 
    CAMError err = CAMSubmitTargetSurface(cam, surface);
    WHBLogPrintf("CAMSubmitTargetSurface: err=%d", err);
-}
-
-void WHBLogConsoleDraw()
-{
-   WHBLogConsoleDrawClear();
-
-   if (image != NULL)
-      LoadNV12(image, false);
-
-   if (drawText)
-      WHBLogConsoleDrawText();
-
-   WHBLogConsoleDrawFlip();
 }
 
 int main(int argc, char **argv)
