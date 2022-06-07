@@ -4,8 +4,6 @@ A simple example to test the Wii U webcam and microphone.
 
 AFAIK this is the first open source Wii U webcam example ever! :D
 
-Download [camtest-0.2.zip](https://github.com/revvv/wut/releases/download/0.2/camtest-0.2.zip)
-
 # Raw image format
 The webcam uses the NV12 format.
 
@@ -13,7 +11,7 @@ The webcam uses the NV12 format.
 
 If you'd like to investigate the raw format of the above image: [raw image](samples/make/camtest/selfie-mario.nv12)
 
-**NOTE**: Cemu does not support a webcam. (I just copied a raw image from my Wii U into Cemu's SD folder.)
+**NOTE**: Cemu does not support a webcam. (I just copied a raw image from my Wii U into Cemu's sdcard folder.)
 
 # Raw audio format
 signed 16-bit PCM, big-endian, mono, 32000 Hz
@@ -29,7 +27,15 @@ $ make
 ```
 
 # Credits
-I imported and adapted [camera.h](https://github.com/revvv/wut/blob/camtest/include/camera/camera.h) from [libcafe](https://github.com/xhp-creations/libcafe/blob/master/include/wiiu/dynlib/camera.h)
+Thanks to [xhp-creations](https://github.com/xhp-creations) for the header files:
+* [camera.h](https://github.com/xhp-creations/libcafe/blob/master/include/wiiu/dynlib/camera.h)
+* [mic.h](https://github.com/xhp-creations/libcafe/blob/master/include/wiiu/dynlib/mic.h)
 
-Thanks @xhp-creations for header files<br>
-Thanks @NessieHax for microphone example
+Thanks to [NessieHax](https://github.com/NessieHax)...
+* for a [microphone example](https://github.com/devkitPro/wut/pull/214#issuecomment-1140265818)
+* for adding [mic.h](https://github.com/devkitPro/wut/blob/master/include/mic/mic.h) to wut
+  (Although I'm still using the libcafe version.)
+
+The libcafe headers I have adapted for my wut fork:
+* [camera.h](https://github.com/revvv/wut/blob/camtest/include/camera/camera.h)
+* [mic.h](https://github.com/revvv/wut/blob/camtest/include/mic/mic.h)
