@@ -236,7 +236,7 @@ void recordMicrophone()
 //   WHBLogPrintf("MICGetStatus: flags=%d available=%d readPos=%d", status->flags, status->available, status->readPos); // 7, 0, 0
                                                                                                                         // 7, 8184, 8 (after MICSetDataConsumed(mic, 8))
    // record 2 seconds audio (s_audioBuffer can store about 2s)
-   OSSleepTicks(OSMillisecondsToTicks(2000));
+   OSSleepTicks(OSMillisecondsToTicks(10000));
 
    const char* wavFilename = "mic.raw";
    FILE* wavFile = fopen(wavFilename, "wb");
