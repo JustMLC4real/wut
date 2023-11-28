@@ -22,3 +22,9 @@ jobs:
       run: |
         cd samples/make/camtest
         make -j2
+    - name: Upload bin Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+       name: output
+       path: ./
+   
