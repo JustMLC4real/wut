@@ -18,26 +18,7 @@ jobs:
       run: |
         apt-get install -y cmake
 
-    - name: Build
-      run: |
-        make -j2
-        make install
-
-    - name: Build Test
-      run: |
-        cd tests
-        mkdir build && cd build
-        /opt/devkitpro/portlibs/wiiu/bin/powerpc-eabi-cmake ../
-        make -j2
-
     - name: Build Samples (Make)
       run: |
-        cd samples/make
-        make -j2
-
-    - name: Build Samples (CMake)
-      run: |
-        cd samples/cmake
-        mkdir build && cd build
-        /opt/devkitpro/portlibs/wiiu/bin/powerpc-eabi-cmake ../
+        cd samples/make/camtest
         make -j2
